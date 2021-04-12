@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jupyter
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jupyter
+  namespace: jupyter
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyter
+  namespace: jupyter
+  labels:
+    app: jupyter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jupyter
+  template:
+    metadata:
+      labels:
+        app: jupyter
+    spec:
+      serviceAccount: jupyter
+      containers:
+        - name: jupyter
+          image: rdtigera/k8s-notebook:latest
+          ports:
+            - containerPort: 8888
+          command: ["start-notebook.sh"]
+          args: ["--NotebookApp.token='pancake'", "--user=root"]
+          env:
+            - name: GRANT_SUDO
+              value: "yes"
+            - name: NB_USER
+              value: root
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jupyter
+  namespace: jupyter
+spec:
+  type: NodePort
+  selector:
+    app: jupyter
+  ports:
+    - protocol: TCP
+      nodePort: 30040
+      port: 8888
+      targetPort: 8888
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jupyter-cluster-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: jupyter
+    namespace: jupyter
+
