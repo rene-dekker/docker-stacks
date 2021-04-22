@@ -41,6 +41,6 @@ RUN apt-get update && apt-get install -y kubectl
 RUN mkdir /tmp/pipcache
 RUN XDG_CACHE_HOME=/tmp/pipcache pip3 install kubernetes
 RUN XDG_CACHE_HOME=/tmp/pipcache pip3 install elasticsearch
-
+COPY --chown=$NB_UID ./notebooks/* /home/jovyan/
 # Switch back to jovyan to avoid accidental container runs as root
 USER $NB_UID
